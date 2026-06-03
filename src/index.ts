@@ -70,7 +70,7 @@ Core fields:
 - temperature (number, optional): sampling temperature (0–2); omitted when blank
 - topP (number, optional): nucleus sampling; omitted when blank
 - maxTokens (number, optional): cap on completion tokens
-- reasoningEffort (string, optional): "low" | "medium" | "high" — forwarded as OpenRouter \`reasoning.effort\` for models that support it
+- reasoningEffort (string, optional): "low" | "medium" | "high" — forwarded as OpenRouter \`reasoning.effort\` for models that support it. Also honors Paperclip's generic "Thinking effort" UI field (\`thinkingEffort\`).
 - disablePromptCaching (boolean, optional): default false. When false, Anthropic/Gemini models receive \`cache_control\` breakpoints (system prefix + conversation prefix) so OpenRouter caches the prompt. No effect on providers that cache implicitly (OpenAI, Grok, DeepSeek).
 - systemPrompt (string, optional): extra system instruction prepended to every run
 - providerSlug (string, optional): pin OpenRouter routing to a single upstream provider slug

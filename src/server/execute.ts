@@ -211,7 +211,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const siteUrl = asString(config.siteUrl, "").trim();
   const siteTitle = asString(config.siteTitle, "Paperclip").trim();
   const providerSlug = asString(config.providerSlug, "").trim();
-  const reasoningEffort = asString(config.reasoningEffort, "").trim().toLowerCase();
+  // Accept either our explicit `reasoningEffort` or Paperclip's generic
+  // "Thinking effort" UI field (`thinkingEffort`) — the built-in adapters use
+  // the latter, so this honors the dropdown shown in the agent config UI.
+  const reasoningEffort = (asString(config.reasoningEffort, "") || asString(config.thinkingEffort, ""))
+    .trim()
+    .toLowerCase();
   const promptCachingDisabled = readBoolean(config.disablePromptCaching, false);
   const useCacheControl = !promptCachingDisabled && modelSupportsExplicitCache(model);
 
