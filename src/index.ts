@@ -61,6 +61,7 @@ Core fields:
 - topP (number, optional): nucleus sampling; omitted when blank
 - maxTokens (number, optional): cap on completion tokens
 - reasoningEffort (string, optional): "low" | "medium" | "high" — forwarded as OpenRouter \`reasoning.effort\` for models that support it
+- disablePromptCaching (boolean, optional): default false. When false, Anthropic/Gemini models receive \`cache_control\` breakpoints (system prefix + conversation prefix) so OpenRouter caches the prompt. No effect on providers that cache implicitly (OpenAI, Grok, DeepSeek).
 - systemPrompt (string, optional): extra system instruction prepended to every run
 - providerSlug (string, optional): pin OpenRouter routing to a single upstream provider slug
 - siteUrl (string, optional): forwarded as HTTP-Referer for OpenRouter app attribution
@@ -94,6 +95,7 @@ Tool harness:
 Notes:
 - Conversation messages persist across heartbeats so multi-turn flows survive between wakes (capped by sessionMessageCap; subject to Paperclip's session compactor).
 - Usage and cost are reported back to Paperclip from OpenRouter's \`usage.include\` response field, summed across turns. Billing type is "credits" (OpenRouter is prepaid).
+- Prompt caching: for Anthropic and Gemini models the adapter sets \`cache_control\` breakpoints on the system prefix and the conversation prefix, so OpenRouter caches the large stable portion across tool-loop turns and resumed sessions. Cached-read tokens are reported as cachedInputTokens.
 - Remaining OpenRouter credit balance is surfaced to Paperclip via the adapter quota window (getQuotaWindows).
 - Tool calls and results are rendered in the run transcript via the bundled UI parser.
 `;

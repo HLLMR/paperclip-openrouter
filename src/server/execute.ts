@@ -34,22 +34,11 @@ import {
 import { isAuthError, isToolUseUnsupported, parseOpenRouterResponse } from "./parse.js";
 import { builtinTools, findTool, toOpenRouterTools } from "./tools/index.js";
 import type { ToolEnvironment } from "./tools/index.js";
+import { buildRequestMessages, modelSupportsExplicitCache, type ChatMessage } from "./cache.js";
 
 const DEFAULT_FS_MAX_BYTES = 256 * 1024;
 const DEFAULT_SHELL_TIMEOUT_SEC = 60;
 const REASONING_EFFORTS = new Set(["low", "medium", "high"]);
-
-interface ChatMessage {
-  role: "system" | "user" | "assistant" | "tool";
-  content: string | null;
-  name?: string;
-  tool_call_id?: string;
-  tool_calls?: Array<{
-    id: string;
-    type: "function";
-    function: { name: string; arguments: string };
-  }>;
-}
 
 function resolveEnvValue(value: unknown): string | null {
   if (typeof value === "string") return value;
@@ -196,6 +185,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const siteTitle = asString(config.siteTitle, "Paperclip").trim();
   const providerSlug = asString(config.providerSlug, "").trim();
   const reasoningEffort = asString(config.reasoningEffort, "").trim().toLowerCase();
+  const promptCachingDisabled = readBoolean(config.disablePromptCaching, false);
+  const useCacheControl = !promptCachingDisabled && modelSupportsExplicitCache(model);
 
   const toolsConfig = parseObject(config.tools);
   const shellConfig = parseObject(toolsConfig.shell);
@@ -337,6 +328,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         `Tools: ${enabledTools.map((t) => t.name).join(", ") || "(none)"}.`,
         `Max tool turns: ${maxToolTurns}.`,
         ...(reasoningEffort && REASONING_EFFORTS.has(reasoningEffort) ? [`Reasoning effort: ${reasoningEffort}.`] : []),
+        ...(useCacheControl ? ["Prompt caching: cache_control breakpoints enabled (Anthropic/Gemini)."] : []),
       ],
       commandArgs: ["POST", "/chat/completions", `model=${model}`],
       env: redactEnvForLogs(env),
@@ -403,7 +395,11 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   });
 
   for (let turn = 0; turn < maxToolTurns; turn++) {
-    const requestBody: Record<string, unknown> = { model, messages, usage: { include: true } };
+    const requestBody: Record<string, unknown> = {
+      model,
+      messages: buildRequestMessages(messages, model, useCacheControl),
+      usage: { include: true },
+    };
     if (Number.isFinite(temperature)) requestBody.temperature = temperature;
     if (Number.isFinite(topP)) requestBody.top_p = topP;
     if (Number.isFinite(maxTokens) && maxTokens > 0) requestBody.max_tokens = maxTokens;
