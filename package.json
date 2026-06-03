@@ -1,0 +1,55 @@
+{
+  "name": "@envora/paperclip-adapter-openrouter",
+  "version": "0.1.0",
+  "description": "Paperclip external adapter for OpenRouter — run any of OpenRouter's 300+ models as a tool-loop agent. No local CLI required. Reports live model catalog, per-run cost, and remaining credit balance back to Paperclip.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Envora",
+  "homepage": "https://github.com/envora/paperclip-adapter-openrouter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/envora/paperclip-adapter-openrouter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/envora/paperclip-adapter-openrouter/issues"
+  },
+  "keywords": [
+    "paperclip",
+    "paperclip-adapter",
+    "openrouter",
+    "llm",
+    "ai-agent",
+    "adapter",
+    "orchestration"
+  ],
+  "paperclip": {
+    "adapterUiParser": "1.0.0"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./server": "./dist/server/index.js",
+    "./ui-parser": "./dist/ui-parser.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc && node --test --test-reporter=spec dist/**/*.test.js",
+    "prepack": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "@paperclipai/adapter-utils": "^2026.325.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
