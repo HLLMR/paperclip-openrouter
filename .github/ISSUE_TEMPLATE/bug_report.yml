@@ -1,0 +1,83 @@
+name: Bug report
+description: Report a problem with the paperclip-openrouter adapter
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report!
+
+        Before submitting, please:
+        - Search existing issues to avoid duplicates.
+        - **Redact all secrets** (API keys, tokens) from any config or logs you paste.
+        - Note that questions about Paperclip itself belong on the
+          [Paperclip repo](https://github.com/paperclipai/paperclip).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug, including what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, step-by-step instructions to reproduce the behavior.
+      placeholder: |
+        1. Configure the adapter with '...'
+        2. Run the agent with prompt '...'
+        3. See error
+    validations:
+      required: true
+  - type: input
+    id: model-id
+    attributes:
+      label: Model id used
+      description: The OpenRouter model id (e.g. `anthropic/claude-3.5-sonnet`).
+      placeholder: openai/gpt-4o
+    validations:
+      required: true
+  - type: textarea
+    id: adapter-config
+    attributes:
+      label: Adapter config (secrets redacted)
+      description: The adapter configuration used. **Remove API keys and any other secrets.**
+      render: json
+    validations:
+      required: false
+  - type: input
+    id: paperclip-version
+    attributes:
+      label: Paperclip version
+      placeholder: e.g. 0.12.3
+    validations:
+      required: true
+  - type: input
+    id: adapter-version
+    attributes:
+      label: Adapter version
+      description: Version of paperclip-openrouter.
+      placeholder: e.g. 1.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any relevant log output. This will be rendered as code, so no backticks needed.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node.js version, and deployment context.
+      placeholder: |
+        - OS: Ubuntu 24.04
+        - Node: 20.11.0
+        - Deployment: Docker / local CLI / CI
+    validations:
+      required: true

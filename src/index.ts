@@ -1,5 +1,5 @@
 /**
- * @envora/paperclip-adapter-openrouter
+ * paperclip-openrouter
  *
  * Shared adapter metadata (type, label, default models, configuration doc).
  * The server module (./server) provides createServerAdapter(); the UI parser
@@ -8,17 +8,27 @@
  */
 import type { AdapterModel } from "@paperclipai/adapter-utils";
 
+// Stable adapter identity. `type` is the discriminator the Paperclip plugin
+// loader matches against (must equal createServerAdapter().type); `label` is the
+// human-facing name shown in the UI.
 export const type = "openrouter";
 export const label = "OpenRouter";
 
+// OpenRouter's OpenAI-compatible API root. Used unless an agent overrides
+// apiBaseUrl; trailing-slash normalization happens at the call sites.
 export const DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 /**
  * A cheap, broadly-available, tool-capable default. Operators can pick any
  * OpenRouter model id per agent; `listModels` exposes the full live catalog.
  */
 export const DEFAULT_MODEL = "openai/gpt-4o-mini";
+// Per-call HTTP timeout (seconds) for OpenRouter requests.
 export const DEFAULT_TIMEOUT_SEC = 180;
+// Safety bound on the in-process tool loop: how many tool-call/response
+// round-trips a single heartbeat may run before we stop, to avoid runaway loops.
 export const DEFAULT_MAX_TOOL_TURNS = 12;
+// How many conversation messages we persist across heartbeats. Bounds session
+// payload size and cost; Paperclip's compactor may trim further on top of this.
 export const DEFAULT_SESSION_MESSAGE_CAP = 40;
 
 /**
@@ -100,4 +110,6 @@ Notes:
 - Tool calls and results are rendered in the run transcript via the bundled UI parser.
 `;
 
+// Re-export so the package root satisfies the external-adapter contract: the
+// plugin loader imports `createServerAdapter` directly from the package entry.
 export { createServerAdapter } from "./server/index.js";

@@ -2,17 +2,28 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { AdapterTool, ToolEnvironment } from "./types.js";
 
+// SECURITY: central choke point for every fs path the model supplies.
+// All three fs tools route their `path` argument through here before touching
+// disk, so the containment policy lives in exactly one place.
 function resolveSafePath(
   env: ToolEnvironment,
   target: unknown,
 ): { resolved: string | null; reason: string | null } {
+  // Reject non-string / blank input up front — the model arg is untrusted.
   if (typeof target !== "string" || target.trim().length === 0) {
     return { resolved: null, reason: "path must be a non-empty string" };
   }
   const trimmed = target.trim();
+  // Normalize to an absolute path. Relative paths are anchored at cwd; `..`
+  // segments are collapsed by path.resolve so escapes can't hide inside them.
   const resolved = path.isAbsolute(trimmed) ? path.resolve(trimmed) : path.resolve(env.cwd, trimmed);
+  // Containment check (skipped only when the run explicitly opts out).
   if (!env.fsAllowOutsideCwd) {
+    // Append the path separator to the root so a sibling dir sharing a prefix
+    // (e.g. /work vs /work-secrets) cannot satisfy the startsWith() test.
     const root = path.resolve(env.cwd) + path.sep;
+    // Inside == the cwd itself, or a descendant under `<cwd>/`. Comparing the
+    // already-resolved path defeats `..` traversal and absolute-path escapes.
     const inside = resolved === path.resolve(env.cwd) || resolved.startsWith(root);
     if (!inside) {
       return {
@@ -24,6 +35,9 @@ function resolveSafePath(
   return { resolved, reason: null };
 }
 
+// Coerce an untrusted numeric arg into [min, max], substituting `fallback` for
+// non-finite / non-number input. Used to bound offset/limit so the model can't
+// pass absurd or hostile values.
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
   const n = typeof value === "number" && Number.isFinite(value) ? value : fallback;
   return Math.max(min, Math.min(max, n));
@@ -46,18 +60,24 @@ export const fsReadFileTool: AdapterTool = {
   enabled: () => true,
   async invoke(input, env) {
     const params = input ?? {};
+    // Gate on the shared path-safety check before any disk access.
     const { resolved, reason } = resolveSafePath(env, params.path);
     if (!resolved) return { ok: false, content: reason ?? "invalid path", isError: true };
     try {
       const bytes = await fs.readFile(resolved);
       let text = bytes.toString("utf8");
+      // Byte cap: hard-truncate oversized files so a huge file can't blow up
+      // the context window or memory; annotate so the model knows it's partial.
       if (bytes.byteLength > env.fsMaxBytes) {
         text =
           text.slice(0, env.fsMaxBytes) +
           `\n\n[truncated: file is ${bytes.byteLength} bytes, limit ${env.fsMaxBytes}]`;
       }
+      // Optional line-window paging over the (already byte-capped) text.
       const offset = clampNumber(params.offset, 0, 0, 1_000_000);
       const limit = clampNumber(params.limit, 5000, 1, 5000);
+      // Only slice when the caller actually narrowed the window, to avoid the
+      // cost of splitting on the common "read the whole file" path.
       if (offset > 0 || limit < 5000) {
         const lines = text.split(/\r?\n/);
         text = lines.slice(offset, offset + limit).join("\n");
@@ -86,16 +106,20 @@ export const fsWriteFileTool: AdapterTool = {
   enabled: () => true,
   async invoke(input, env) {
     const params = input ?? {};
+    // Same containment gate as reads — writes outside cwd are the bigger risk.
     const { resolved, reason } = resolveSafePath(env, params.path);
     if (!resolved) return { ok: false, content: reason ?? "invalid path", isError: true };
     if (typeof params.content !== "string") {
       return { ok: false, content: "content must be a string", isError: true };
     }
+    // Reject (don't truncate) oversized writes: a partial file would be wrong.
     if (Buffer.byteLength(params.content, "utf8") > env.fsMaxBytes) {
       return { ok: false, content: `content exceeds fsMaxBytes (${env.fsMaxBytes})`, isError: true };
     }
     try {
+      // Create missing parent dirs so a single write can land a nested path.
       await fs.mkdir(path.dirname(resolved), { recursive: true });
+      // Validate the optional mode; default to 0o644 (owner rw, others r).
       const mode =
         typeof params.mode === "number" && Number.isFinite(params.mode) ? params.mode : 0o644;
       await fs.writeFile(resolved, params.content, { mode });
@@ -121,13 +145,18 @@ export const fsListDirTool: AdapterTool = {
   enabled: () => true,
   async invoke(input, env) {
     const params = input ?? {};
+    // Containment gate applies to directory listing too (avoids info leak).
     const { resolved, reason } = resolveSafePath(env, params.path);
     if (!resolved) return { ok: false, content: reason ?? "invalid path", isError: true };
     try {
+      // withFileTypes lets us label entries without an extra stat per name.
       const entries = await fs.readdir(resolved, { withFileTypes: true });
       const lines = entries
+        // Stable alphabetical order so listings are deterministic for the model.
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((e) => {
+          // Surface symlinks distinctly — they are a path-escape vector the
+          // model/operator should be aware of.
           const kind = e.isDirectory() ? "dir" : e.isSymbolicLink() ? "link" : "file";
           return `${kind} ${e.name}`;
         });

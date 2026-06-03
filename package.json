@@ -1,17 +1,17 @@
 {
-  "name": "@envora/paperclip-adapter-openrouter",
+  "name": "paperclip-openrouter",
   "version": "0.1.0",
-  "description": "Paperclip external adapter for OpenRouter — run any of OpenRouter's 300+ models as a tool-loop agent. No local CLI required. Reports live model catalog, per-run cost, and remaining credit balance back to Paperclip.",
+  "description": "Paperclip external adapter for OpenRouter — run any of OpenRouter's 300+ models as a tool-loop agent. No local CLI. Live model catalog, per-run cost, credit-balance reporting, and Anthropic/Gemini prompt caching.",
   "type": "module",
   "license": "MIT",
-  "author": "Envora",
-  "homepage": "https://github.com/envora/paperclip-adapter-openrouter",
+  "author": "HLLMR",
+  "homepage": "https://github.com/HLLMR/paperclip-openrouter#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/envora/paperclip-adapter-openrouter.git"
+    "url": "git+https://github.com/HLLMR/paperclip-openrouter.git"
   },
   "bugs": {
-    "url": "https://github.com/envora/paperclip-adapter-openrouter/issues"
+    "url": "https://github.com/HLLMR/paperclip-openrouter/issues"
   },
   "keywords": [
     "paperclip",
@@ -20,6 +20,8 @@
     "llm",
     "ai-agent",
     "adapter",
+    "anthropic",
+    "prompt-caching",
     "orchestration"
   ],
   "paperclip": {
@@ -39,7 +41,7 @@
     "clean": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test --test-reporter=spec dist/**/*.test.js",
+    "test": "tsc && node scripts/run-tests.mjs",
     "prepack": "npm run clean && npm run build"
   },
   "dependencies": {

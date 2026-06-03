@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest an idea or enhancement for the paperclip-openrouter adapter
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! Please check existing issues first
+        to avoid duplicates. Requests about Paperclip itself belong on the
+        [Paperclip repo](https://github.com/paperclipai/paperclip).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem are you trying to solve? Why does it matter?
+      placeholder: I'm frustrated when [...] / It would help because [...]
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior or feature you'd like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds you've evaluated.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context, links, or screenshots about the request.
+    validations:
+      required: false
