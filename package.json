@@ -39,10 +39,10 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "tsc && node scripts/run-tests.mjs",
-    "prepack": "npm run clean && npm run build"
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@paperclipai/adapter-utils": "^2026.325.0"
