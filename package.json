@@ -48,8 +48,8 @@
     "@paperclipai/adapter-utils": "^2026.325.0"
   },
   "devDependencies": {
-    "@types/node": "^24.6.0",
-    "typescript": "^5.7.3"
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20"
