@@ -1,6 +1,6 @@
 {
   "name": "paperclip-openrouter",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Paperclip external adapter for OpenRouter — run any of OpenRouter's 300+ models as a tool-loop agent. No local CLI. Live model catalog, per-run cost, credit-balance reporting, and Anthropic/Gemini prompt caching.",
   "type": "module",
   "license": "MIT",

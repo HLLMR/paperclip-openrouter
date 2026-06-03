@@ -35,6 +35,7 @@ import { isAuthError, isToolUseUnsupported, parseOpenRouterResponse } from "./pa
 import { builtinTools, findTool, toOpenRouterTools } from "./tools/index.js";
 import type { ToolEnvironment } from "./tools/index.js";
 import { buildRequestMessages, modelSupportsExplicitCache, type ChatMessage } from "./cache.js";
+import { loadDesiredSkillsForRun, renderSkillsSection } from "./skills.js";
 
 const DEFAULT_FS_MAX_BYTES = 256 * 1024;
 const DEFAULT_SHELL_TIMEOUT_SEC = 60;
@@ -353,7 +354,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   // together, IN THIS DELIBERATE ORDER: bootstrap prompt, session handoff note,
   // wake context, tool-capability note, then the rendered task prompt. Ordering
   // matters — context-setting framing comes first, the actual ask comes last.
-  const systemContent = joinPromptSections([systemPromptOverride, instructionsPrefix].filter((s) => s && s.trim().length > 0));
+  // Ephemeral skills: read the agent's selected company skills and inject their
+  // markdown as a `## Skills` section. Lands in the cached system prefix for
+  // Anthropic/Gemini, so the skill tokens are paid once per cache window.
+  const skillsSection = renderSkillsSection(await loadDesiredSkillsForRun(config));
+  const systemContent = joinPromptSections(
+    [systemPromptOverride, skillsSection, instructionsPrefix].filter((s) => s && s.trim().length > 0),
+  );
   const userContent = joinPromptSections([
     renderedBootstrapPrompt,
     sessionHandoffNote,

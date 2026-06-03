@@ -108,6 +108,7 @@ Notes:
 - Prompt caching: for Anthropic and Gemini models the adapter sets \`cache_control\` breakpoints on the system prefix and the conversation prefix, so OpenRouter caches the large stable portion across tool-loop turns and resumed sessions. Cached-read tokens are reported as cachedInputTokens.
 - Remaining OpenRouter credit balance is surfaced to Paperclip via the adapter quota window (getQuotaWindows).
 - Tool calls and results are rendered in the run transcript via the bundled UI parser.
+- Skills (ephemeral): the agent's selected company skills are read from Paperclip's skill store and injected into the system prompt as a \`## Skills\` section each run. There is no runtime filesystem to materialize into; for Anthropic/Gemini the injected skills ride in the cached prefix.
 `;
 
 // Re-export so the package root satisfies the external-adapter contract: the

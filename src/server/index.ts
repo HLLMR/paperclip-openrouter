@@ -14,6 +14,7 @@ import { execute } from "./execute.js";
 import { testEnvironment } from "./test.js";
 import { listOpenRouterModels } from "./models.js";
 import { getOpenRouterQuotaWindows } from "./quota.js";
+import { listOpenRouterSkills, syncOpenRouterSkills } from "./skills.js";
 
 // Persisted session blobs are untrusted (round-tripped through storage), so the
 // codec validates defensively rather than trusting shapes.
@@ -89,6 +90,7 @@ export { execute } from "./execute.js";
 export { testEnvironment } from "./test.js";
 export { listOpenRouterModels } from "./models.js";
 export { getOpenRouterQuotaWindows } from "./quota.js";
+export { listOpenRouterSkills, syncOpenRouterSkills } from "./skills.js";
 
 // Factory the plugin loader calls once to assemble the full adapter surface.
 // Wires together: run execution, the environment self-test, session codec +
@@ -115,6 +117,10 @@ export function createServerAdapter(): ServerAdapterModule {
     models,
     listModels: listOpenRouterModels,
     getQuotaWindows: getOpenRouterQuotaWindows,
+    // Skills (ephemeral mode): selected company skills are injected into the
+    // system prompt at run time. Implementing these flips supportsSkills=true.
+    listSkills: listOpenRouterSkills,
+    syncSkills: syncOpenRouterSkills,
     supportsLocalAgentJwt: true,
     supportsInstructionsBundle: true,
     instructionsPathKey: "instructionsFilePath",

@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-03
+
+### Added
+
+- **Skills support (ephemeral mode).** Implements `listSkills`/`syncSkills`, so
+  Paperclip now reports `supportsSkills: true` and shows the skill picker. The
+  agent's selected company skills are read from Paperclip's on-disk skill store
+  and injected into the model's system prompt at run time (a `## Skills`
+  section). For Anthropic/Gemini models the injected skills land in the cached
+  prefix, so their tokens are paid once per cache window. No runtime filesystem
+  is required — suited to this direct-API adapter.
+
 ## [0.1.1] - 2026-06-03
 
 ### Fixed
@@ -44,6 +56,7 @@ Initial release.
 - Environment diagnostics (`testEnvironment`): key validation, live model-catalog
   check, credit balance, and a hello probe.
 
-[Unreleased]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/HLLMR/paperclip-openrouter/releases/tag/v0.1.0
