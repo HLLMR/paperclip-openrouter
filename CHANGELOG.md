@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-03
+
+### Fixed
+
+- Advertise instructions-bundle support (`supportsInstructionsBundle: true` +
+  `instructionsPathKey: "instructionsFilePath"`) so Paperclip injects the
+  agent's instructions bundle (its AGENTS.md persona) into the run. `execute()`
+  already consumed `instructionsFilePath`; without the flags Paperclip never
+  populated it, so agents ran without their persona.
+
 ## [0.1.0] - 2026-06-03
 
 Initial release.
@@ -34,5 +44,6 @@ Initial release.
 - Environment diagnostics (`testEnvironment`): key validation, live model-catalog
   check, credit balance, and a hello probe.
 
-[Unreleased]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/HLLMR/paperclip-openrouter/releases/tag/v0.1.0

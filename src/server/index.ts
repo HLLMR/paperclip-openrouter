@@ -95,7 +95,16 @@ export { getOpenRouterQuotaWindows } from "./quota.js";
 // management policy, the seed/live model catalog, and credit-balance quota
 // reporting.
 export function createServerAdapter(): ServerAdapterModule {
-  return {
+  // Paperclip reads `supportsInstructionsBundle` + `instructionsPathKey` at
+  // runtime to inject the agent's instructions bundle (its AGENTS.md persona)
+  // into `config.instructionsFilePath`, which execute() then prepends to the
+  // system prompt. Without these flags the agent runs with no persona. They are
+  // not part of the published ServerAdapterModule type, so we widen the local
+  // type to declare them without tripping excess-property checks.
+  const module: ServerAdapterModule & {
+    supportsInstructionsBundle: boolean;
+    instructionsPathKey: string;
+  } = {
     type,
     execute,
     testEnvironment,
@@ -107,6 +116,9 @@ export function createServerAdapter(): ServerAdapterModule {
     listModels: listOpenRouterModels,
     getQuotaWindows: getOpenRouterQuotaWindows,
     supportsLocalAgentJwt: true,
+    supportsInstructionsBundle: true,
+    instructionsPathKey: "instructionsFilePath",
     agentConfigurationDoc,
   };
+  return module;
 }
