@@ -15,6 +15,10 @@ test("modelSupportsExplicitCache only matches Anthropic and Gemini", () => {
   assert.equal(modelSupportsExplicitCache("google/gemini-2.0-flash-001"), true);
   assert.equal(modelSupportsExplicitCache("openai/gpt-4o-mini"), false);
   assert.equal(modelSupportsExplicitCache("deepseek/deepseek-chat"), false);
+  // OpenRouter "latest" aliases carry a leading `~` — they must still cache.
+  assert.equal(modelSupportsExplicitCache("~anthropic/claude-opus-latest"), true);
+  assert.equal(modelSupportsExplicitCache("~google/gemini-pro-latest"), true);
+  assert.equal(modelSupportsExplicitCache("~openai/gpt-4o-latest"), false);
 });
 
 test("non-Anthropic models are returned unchanged (string content)", () => {

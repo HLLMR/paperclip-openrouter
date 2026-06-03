@@ -37,7 +37,10 @@ export type RequestMessage = Omit<ChatMessage, "content"> & {
 
 /** Providers that require an explicit cache_control breakpoint via OpenRouter. */
 export function modelSupportsExplicitCache(model: string): boolean {
-  return /^(anthropic|google)\//i.test(model.trim());
+  // The optional leading `~` is OpenRouter's marker for a floating "latest"
+  // alias (e.g. `~anthropic/claude-opus-latest`). Tolerate it so alias ids
+  // cache just like their pinned counterparts (`anthropic/claude-opus-4.8`).
+  return /^~?(anthropic|google)\//i.test(model.trim());
 }
 
 // Wrap a plain string body in the single-part array shape OpenRouter expects
