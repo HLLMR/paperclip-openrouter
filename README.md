@@ -15,7 +15,7 @@ It talks straight to the OpenRouter REST API (`/chat/completions`) and runs an i
 - **No runtime to install.** Unlike CLI adapters (`claude_local`, `codex_local`, `opencode_local`), this needs only an OpenRouter API key.
 - **Full live model catalog.** The agent model picker is populated from OpenRouter's live `/models` endpoint (cached 5 min), not a hardcoded list.
 - **Real cost + credits.** Per-run cost comes from OpenRouter's `usage.include` field; remaining prepaid credit balance is surfaced to Paperclip's quota dashboard via `getQuotaWindows()`.
-- **Prompt caching built in.** Anthropic and Gemini requests get `cache_control` breakpoints on the stable system + conversation prefix, so OpenRouter caches the expensive part across tool-loop turns and resumed sessions. See [docs/cost-and-caching.md](docs/cost-and-caching.md).
+- **Prompt caching built in (verified).** Anthropic and Gemini requests get `cache_control` breakpoints on the stable system + conversation prefix; measured end-to-end through OpenRouter, a cache read bills the cached tokens at ~10% of input. Note: providers only cache a prefix **above a minimum size** (a few thousand tokens; higher for Haiku), so short prompts won't cache. `cacheTtl: "1h"` extends the cache for spaced heartbeats. See [docs/cost-and-caching.md](docs/cost-and-caching.md).
 - **Honest packaging.** Ships compiled `dist/`, the `./ui-parser` export with `paperclip.adapterUiParser`, and `createServerAdapter()` — it satisfies the official external-adapter contract.
 
 ## How it compares
@@ -87,6 +87,7 @@ Full reference: [docs/configuration.md](docs/configuration.md). Highlights:
 | `temperature`, `topP`, `maxTokens` | unset | omitted when blank |
 | `reasoningEffort` | unset | `low`/`medium`/`high` for reasoning models |
 | `disablePromptCaching` | `false` | turn off Anthropic/Gemini `cache_control` |
+| `cacheTtl` | `5m` | cache lifetime; `1h` for heartbeats spaced > 5 min |
 | `maxToolTurns` | `12` | tool-call/response loop cap per heartbeat |
 | `tools.shell.enabled` | `false` | opt-in shell execution |
 | `tools.fs.allowOutsideCwd` | `false` | restrict fs tools to the workspace |

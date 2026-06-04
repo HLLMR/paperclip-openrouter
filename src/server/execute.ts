@@ -34,7 +34,7 @@ import {
 import { isAuthError, isToolUseUnsupported, parseOpenRouterResponse } from "./parse.js";
 import { builtinTools, findTool, toOpenRouterTools } from "./tools/index.js";
 import type { ToolEnvironment } from "./tools/index.js";
-import { buildRequestMessages, modelSupportsExplicitCache, type ChatMessage } from "./cache.js";
+import { buildRequestMessages, modelSupportsExplicitCache, type CacheTtl, type ChatMessage } from "./cache.js";
 import { loadDesiredSkillsForRun, renderSkillsSection } from "./skills.js";
 
 const DEFAULT_FS_MAX_BYTES = 256 * 1024;
@@ -220,6 +220,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     .toLowerCase();
   const promptCachingDisabled = readBoolean(config.disablePromptCaching, false);
   const useCacheControl = !promptCachingDisabled && modelSupportsExplicitCache(model);
+  // "1h" extends the cached prefix to the provider's 1-hour cache — worth it
+  // when heartbeats are spaced past the default 5-minute window. Anything else
+  // falls back to the 5m default.
+  const cacheTtl: CacheTtl = asString(config.cacheTtl, "5m").trim() === "1h" ? "1h" : "5m";
 
   // --- Tool + loop limits ---
   // Shell and fs tools are opt-in and sandboxed (allow-lists, byte/time caps).
@@ -404,7 +408,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         `Tools: ${enabledTools.map((t) => t.name).join(", ") || "(none)"}.`,
         `Max tool turns: ${maxToolTurns}.`,
         ...(reasoningEffort && REASONING_EFFORTS.has(reasoningEffort) ? [`Reasoning effort: ${reasoningEffort}.`] : []),
-        ...(useCacheControl ? ["Prompt caching: cache_control breakpoints enabled (Anthropic/Gemini)."] : []),
+        ...(useCacheControl ? [`Prompt caching: cache_control breakpoints enabled (Anthropic/Gemini, ttl=${cacheTtl}).`] : []),
       ],
       commandArgs: ["POST", "/chat/completions", `model=${model}`],
       env: redactEnvForLogs(env),
@@ -490,7 +494,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     // when caching is enabled; usage.include asks OpenRouter to return token/cost.
     const requestBody: Record<string, unknown> = {
       model,
-      messages: buildRequestMessages(messages, model, useCacheControl),
+      messages: buildRequestMessages(messages, model, useCacheControl, cacheTtl),
       usage: { include: true },
     };
     if (Number.isFinite(temperature)) requestBody.temperature = temperature;

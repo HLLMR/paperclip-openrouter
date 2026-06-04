@@ -72,6 +72,7 @@ Core fields:
 - maxTokens (number, optional): cap on completion tokens
 - reasoningEffort (string, optional): "low" | "medium" | "high" — forwarded as OpenRouter \`reasoning.effort\` for models that support it. Also honors Paperclip's generic "Thinking effort" UI field (\`thinkingEffort\`).
 - disablePromptCaching (boolean, optional): default false. When false, Anthropic/Gemini models receive \`cache_control\` breakpoints (system prefix + conversation prefix) so OpenRouter caches the prompt. No effect on providers that cache implicitly (OpenAI, Grok, DeepSeek).
+- cacheTtl (string, optional): "5m" (default) or "1h". Sets the cache lifetime for Anthropic/Gemini caching. Use "1h" when the agent's heartbeats are spaced more than five minutes apart so the cached prefix survives between wakes.
 - systemPrompt (string, optional): extra system instruction prepended to every run
 - providerSlug (string, optional): pin OpenRouter routing to a single upstream provider slug
 - siteUrl (string, optional): forwarded as HTTP-Referer for OpenRouter app attribution
@@ -105,7 +106,7 @@ Tool harness:
 Notes:
 - Conversation messages persist across heartbeats so multi-turn flows survive between wakes (capped by sessionMessageCap; subject to Paperclip's session compactor).
 - Usage and cost are reported back to Paperclip from OpenRouter's \`usage.include\` response field, summed across turns. Billing type is "credits" (OpenRouter is prepaid).
-- Prompt caching: for Anthropic and Gemini models the adapter sets \`cache_control\` breakpoints on the system prefix and the conversation prefix, so OpenRouter caches the large stable portion across tool-loop turns and resumed sessions. Cached-read tokens are reported as cachedInputTokens.
+- Prompt caching: for Anthropic and Gemini models the adapter sets \`cache_control\` breakpoints on the system prefix and the conversation prefix, so OpenRouter caches the large stable portion across tool-loop turns and resumed sessions. Verified end-to-end through OpenRouter (a cache read bills the cached tokens at ~10% of input). Cached-read tokens are reported as cachedInputTokens. Caveat: providers only cache a prefix above a minimum size (a few thousand tokens; higher for Haiku) — short prompts will not cache, by design. Default lifetime is 5 minutes; set cacheTtl="1h" for spaced heartbeats.
 - Remaining OpenRouter credit balance is surfaced to Paperclip via the adapter quota window (getQuotaWindows).
 - Tool calls and results are rendered in the run transcript via the bundled UI parser.
 - Skills (ephemeral): the agent's selected company skills are read from Paperclip's skill store and injected into the system prompt as a \`## Skills\` section each run. There is no runtime filesystem to materialize into; for Anthropic/Gemini the injected skills ride in the cached prefix.

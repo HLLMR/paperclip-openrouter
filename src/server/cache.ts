@@ -24,10 +24,20 @@ export interface ChatMessage {
   }>;
 }
 
+/**
+ * Cache lifetime. "5m" is Anthropic's default ephemeral cache; "1h" is the
+ * extended cache — worth it for agents whose heartbeats are spaced more than
+ * five minutes apart, so the cached prefix survives between wakes (a 1h write
+ * costs more, but is repaid by a single read within the hour).
+ */
+export type CacheTtl = "5m" | "1h";
+
 interface CacheTextPart {
   type: "text";
   text: string;
-  cache_control: { type: "ephemeral" };
+  // `ttl` is omitted for the 5m default; OpenRouter forwards "1h" to the
+  // provider's extended cache.
+  cache_control: { type: "ephemeral"; ttl?: "1h" };
 }
 
 /** A message as sent on the wire — content may be a cached text-part array. */
@@ -44,10 +54,12 @@ export function modelSupportsExplicitCache(model: string): boolean {
 }
 
 // Wrap a plain string body in the single-part array shape OpenRouter expects
-// when attaching a cache breakpoint. "ephemeral" is the only cache_control type
-// the providers expose (a short-lived, ~5-minute cache).
-function cachedContent(text: string): CacheTextPart[] {
-  return [{ type: "text", text, cache_control: { type: "ephemeral" } }];
+// when attaching a cache breakpoint. Adds the "1h" extended-cache marker only
+// when requested; otherwise the provider default (5m) applies.
+function cachedContent(text: string, ttl: CacheTtl): CacheTextPart[] {
+  const cache_control: CacheTextPart["cache_control"] =
+    ttl === "1h" ? { type: "ephemeral", ttl: "1h" } : { type: "ephemeral" };
+  return [{ type: "text", text, cache_control }];
 }
 
 /**
@@ -58,6 +70,7 @@ export function buildRequestMessages(
   messages: ChatMessage[],
   model: string,
   enabled: boolean,
+  ttl: CacheTtl = "5m",
 ): ChatMessage[] | RequestMessage[] {
   // Fast path: caching off, or a provider that caches implicitly — return the
   // caller's array untouched (no copy, no rewrite).
@@ -96,7 +109,7 @@ export function buildRequestMessages(
   for (const i of cacheIndexes) {
     const message = out[i];
     if (message && typeof message.content === "string") {
-      out[i] = { ...message, content: cachedContent(message.content) };
+      out[i] = { ...message, content: cachedContent(message.content, ttl) };
     }
   }
   return out;

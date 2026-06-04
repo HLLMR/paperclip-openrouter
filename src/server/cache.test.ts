@@ -54,3 +54,18 @@ test("does not mutate the input messages array", () => {
   buildRequestMessages(messages, "anthropic/claude-3.5-sonnet", true);
   assert.equal(JSON.stringify(messages), before);
 });
+
+function cacheControlOf(out: ReturnType<typeof buildRequestMessages>, idx: number): unknown {
+  const parts = out[idx]?.content as unknown as Array<{ cache_control?: unknown }>;
+  return parts[0]?.cache_control;
+}
+
+test("default ttl (5m) omits the ttl field", () => {
+  const out = buildRequestMessages(messages, "anthropic/claude-3.5-sonnet", true);
+  assert.deepEqual(cacheControlOf(out, 0), { type: "ephemeral" });
+});
+
+test("ttl=1h adds the extended-cache marker", () => {
+  const out = buildRequestMessages(messages, "anthropic/claude-3.5-sonnet", true, "1h");
+  assert.deepEqual(cacheControlOf(out, 0), { type: "ephemeral", ttl: "1h" });
+});

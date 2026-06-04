@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-04
+
+### Added
+
+- **`cacheTtl` option ("5m" default / "1h").** Sets the Anthropic/Gemini cache
+  lifetime. Use "1h" when an agent's heartbeats are spaced past the 5-minute
+  default so the cached prefix survives between wakes.
+
+### Changed
+
+- Documented that prompt caching is **verified working through OpenRouter** (a
+  cache read bills cached tokens at ~10% of input), and that providers only
+  cache a prefix **above a minimum size** (a few thousand tokens; higher for
+  Haiku) — short prompts do not cache, by design.
+
 ## [0.2.0] - 2026-06-03
 
 ### Added
@@ -56,7 +71,8 @@ Initial release.
 - Environment diagnostics (`testEnvironment`): key validation, live model-catalog
   check, credit balance, and a hello probe.
 
-[Unreleased]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/HLLMR/paperclip-openrouter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/HLLMR/paperclip-openrouter/releases/tag/v0.1.0
